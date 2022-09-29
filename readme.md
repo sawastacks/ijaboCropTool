@@ -160,8 +160,15 @@ use App\Http\Controllers\UploadController;
 
 > On Server side.
 ```php
+use Illuminate\Support\Facades\File;
+....
+....
+
   function crop(Request $request){
       $path = 'files/';
+      if (!File::exists(public_path($path))) {
+           File::makeDirectory(public_path($path),0777,true);
+      }
       $file = $request->file('file');
       $new_image_name = 'UIMG'.date('Ymd').uniqid().'.jpg';
       $upload = $file->move(public_path($path), $new_image_name);
@@ -171,6 +178,32 @@ use App\Http\Controllers\UploadController;
             return response()->json(['status'=>0, 'msg'=>'Something went wrong, try again later']);
       }
     }
+```
+> If you have used Image Intervention Package in your project, you can use the following code:
+```php
+use Illuminate\Support\Facades\File;
+use Intervention\Image\Facades\Image;
+....
+....
+
+  public function crop(Request $request){
+        $path = 'files/';
+        if (!File::exists(public_path($path))) {
+             File::makeDirectory(public_path($path),0777,true);
+        }
+        $file = $request->file('file');
+        $new_image_name = 'UIMG'.date('Ymd').uniqid().'.jpg';
+        $resize_upload = Image::make( $file->path() )
+                              ->fit(250, 250)
+                              ->save( $path.$new_image_name );
+
+        if($resize_upload){
+            return response()->json(['status'=>1, 'msg'=>'Image has been cropped successfully.', 'name'=>$new_image_name]);
+            }else{
+                return response()->json(['status'=>0, 'msg'=>'Something went wrong, try again later']);
+           }
+        }
+
 ```
 
 # [3] - How to use this plugin in [CodeIgniter](https://www.codeigniter.com/ 'Visit CodeIgniter Official website')
